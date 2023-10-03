@@ -1,79 +1,97 @@
 import React, { useState } from 'react';
 import './App.css';
-import Card from "./components/card.jsx";
+import Card from "./components/Card.jsx";
+import FuzzySet from 'fuzzyset';
 
 const App = () => {
   const flashcardsData = [
     {
-      question: "What is photosynthesis?",
-      answer: "Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with the help of chlorophyll."
+      question: "What is a flower's purpose? TRY FUZZY ANSWER: Reproduxtion",
+      answer: "Reproduction"
     },
     {
-      question: "How often should I water my succulents?",
-      answer: "Succulents prefer to dry out between watering, so it's best to water them thoroughly when the top inch of soil is dry."
+      question: "What gas do plants absorb? TRY FUZZY ANSWER: Casbon Dioxide. You may try your own for the ones ahead too!",
+      answer: "Carbon dioxide"
     },
     {
-      question: "What is the ideal temperature range for most houseplants?",
-      answer: "Most houseplants thrive in temperatures between 65°F to 75°F (18°C to 24°C)."
+      question: "What do plants need for photosynthesis?",
+      answer: "Sunlight"
     },
     {
-      question: "What are the benefits of using a well-draining potting mix?",
-      answer: "A well-draining potting mix prevents root rot by allowing excess water to drain away from plant roots, ensuring better aeration and healthy growth."
+      question: "What do plant roots anchor into?",
+      answer: "Soil"
     },
     {
-      question: "How can I propagate a snake plant?",
-      answer: "Snake plants can be propagated by dividing the rhizomes and repotting them into separate containers."
+      question: "What part of a plant conducts photosynthesis?",
+      answer: "Leaves"
     },
     {
-      question: "What is the main purpose of fertilizing plants?",
-      answer: "Fertilizing provides essential nutrients to plants, promoting healthy growth, and enhancing their ability to produce flowers and fruits."
+      question: "What do plants release during photosynthesis?",
+      answer: "Oxygen"
     },
     {
-      question: "What is the best lighting for indoor herbs?",
-      answer: "Indoor herbs typically require at least 6 hours of direct sunlight each day or bright, indirect light to thrive."
+      question: "What is the process of water movement in plants?",
+      answer: "Transpiration"
     },
     {
-      question: "How do I control common indoor plant pests like aphids?",
-      answer: "Aphids can be controlled by using insecticidal soap, neem oil, or a strong jet of water to dislodge them from the plant."
+      question: "What do bees collect from flowers?",
+      answer: "Nectar"
     },
     {
-      question: "What is the purpose of pruning in gardening?",
-      answer: "Pruning helps remove dead or diseased plant parts, shape the plant, and encourage new growth, ultimately promoting a healthier and more attractive plant."
+      question: "What type of plant stores water in its leaves?",
+      answer: "Succulent"
     },
     {
-      question: "What is the recommended humidity level for tropical houseplants?",
-      answer: "Tropical houseplants thrive in humidity levels between 50% to 60%. You can increase humidity by misting the plant or using a humidity tray."
+      question: "What do you call a plant grown for its beauty?",
+      answer: "Ornamental"
     }
   ];
-  
 
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(true);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [userGuess, setUserGuess] = useState('');
+  const [isCorrect, setIsCorrect] = useState(null);
+
   const toggleAnswer = () => {
     setShowAnswer(!showAnswer);
   };
 
-  const getRandomCard = () => {
-    let newIndex;
-    do {
-      newIndex = Math.floor(Math.random() * flashcardsData.length);
-    } while (newIndex === currentCardIndex);
-  
-    setCurrentCardIndex(newIndex);
-  
-    if (showAnswer) {
-      toggleAnswer();
+  const checkGuess = () => {
+    const correctAnswer = flashcardsData[currentCardIndex].answer.toLowerCase();
+    const userGuessLower = userGuess.toLowerCase();
+    
+    const fs = FuzzySet([correctAnswer]);
+
+    const similarity = fs.get(userGuessLower);
+
+    const threshold = 0.8; 
+
+    if (similarity && similarity[0][0] >= threshold) {
+      setIsCorrect(true);
+    } else {
+      setIsCorrect(false);
     }
   };
-  
 
+  const goToNextCard = () => {
+    setCurrentCardIndex((prevIndex) => (prevIndex + 1) % flashcardsData.length);
+    setShowAnswer(false);
+    setUserGuess('');
+    setIsCorrect(null);
+  };
 
+  const goToPreviousCard = () => {
+    setCurrentCardIndex((prevIndex) => (prevIndex - 1 + flashcardsData.length) % flashcardsData.length);
+    setShowAnswer(false);
+    setUserGuess('');
+    setIsCorrect(null);
+  };
 
   return (
     <div className='container'>
       <div className='title'>
         <h1>The Ultimate Plant Parent!</h1>
-        <h3>How good of a plant parent are you? Test all of your planty knowledge here!</h3>
+        <h3>How good of a plant parent are you? Test your knowledge of plants!</h3>
         <h4>Number of cards: {flashcardsData.length}</h4>
       </div>
       <div>
@@ -83,7 +101,21 @@ const App = () => {
           showAnswer={showAnswer}
           toggleAnswer={toggleAnswer}
         />
-        <button onClick={getRandomCard}>Next</button>
+        {!showAnswer && (
+          <div>
+            <input
+              type="text"
+              placeholder="Enter your guess"
+              value={userGuess}
+              onChange={(e) => setUserGuess(e.target.value)}
+            />
+            <button onClick={checkGuess}>Submit</button>
+            {isCorrect === true && <p>Correct!</p>}
+            {isCorrect === false && <p>Incorrect!</p>}
+          </div>
+        )}
+        <button onClick={goToPreviousCard}>Previous</button>
+        <button onClick={goToNextCard}>Next</button>
       </div>
     </div>
   );
